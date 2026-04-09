@@ -50,12 +50,3 @@ android {
 flutter {
     source = "../.."
 }
-
-// FIX 4: The Kotlin Script translation to bypass the core-viewtree ghost file bug
-configurations.all {
-    resolutionStrategy.eachDependency {
-        if (requested.group == "androidx.core" && requested.name == "core") {
-            useVersion("1.12.0")
-        }
-    }
-}

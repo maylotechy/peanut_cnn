@@ -154,7 +154,7 @@ class _HomePageState extends State<HomePage> {
             _confidenceStr = "Accuracy: ${(confidence * 100).toStringAsFixed(1)}%";
           } else {
             // Remove index numbers (e.g., "0 Early" -> "Early")
-            _prediction = "Disease Detected: " + label.replaceAll(RegExp(r'[0-9]'), '').trim();
+            _prediction = label.replaceAll(RegExp(r'[0-9]'), '').trim();
             _confidenceStr = "Accuracy: ${(confidence * 100).toStringAsFixed(1)}%";
           }
         } else {
@@ -388,11 +388,15 @@ class _HomePageState extends State<HomePage> {
               // Results Section
               if (_showResult) ...[
                 Text(
-                  _prediction,
+                  _prediction == "Not a Peanut Leaf" || _prediction == "Could not identify"
+                      ? _prediction
+                      : _prediction == 'Healthy'
+                          ? 'Status: Healthy plant!'
+                          : 'Disease Detected: $_prediction',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: _prediction == "Not a Peanut Leaf" ? Colors.red : _textColor,
-                    fontSize: 24,
+                    color: _prediction == 'Healthy' ? Colors.green : Colors.red,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
