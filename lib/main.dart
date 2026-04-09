@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_tflite/flutter_tflite.dart';
+import 'package:image_cropper/image_cropper.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,10 +21,11 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.green,
         fontFamily: 'Outfit',
       ),
-      home: const HomePage(),
+      home: const WelcomeScreen(),
     );
   }
 }
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -73,8 +75,30 @@ class _HomePageState extends State<HomePage> {
       final image = await ImagePicker().pickImage(source: source);
       if (image == null) return;
 
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: image.path,
+        uiSettings: [
+          AndroidUiSettings(
+              toolbarTitle: 'Crop Image',
+              toolbarColor: const Color(0xFF2EAA78),
+              toolbarWidgetColor: Colors.white,
+              initAspectRatio: CropAspectRatioPreset.square,
+              lockAspectRatio: true,
+              aspectRatioPresets: [CropAspectRatioPreset.square],
+          ),
+          IOSUiSettings(
+            title: 'Crop Image',
+            aspectRatioLockEnabled: true,
+            resetAspectRatioEnabled: false,
+            aspectRatioPresets: [CropAspectRatioPreset.square],
+          ),
+        ],
+      );
+
+      if (croppedFile == null) return;
+
       setState(() {
-        _image = File(image.path);
+        _image = File(croppedFile.path);
         // Reset results when a new image is picked
         _showResult = false;
         _prediction = "";
@@ -125,13 +149,13 @@ class _HomePageState extends State<HomePage> {
           String label = output[0]['label'];
 
           // "Not a Leaf" Logic (Threshold < 70%)
-          if (confidence < 0.60) {
+          if (confidence < 0.70) {
             _prediction = "Not a Peanut Leaf";
-            _confidenceStr = "Low Confidence: ${(confidence * 100).toStringAsFixed(1)}%";
+            _confidenceStr = "Accuracy: ${(confidence * 100).toStringAsFixed(1)}%";
           } else {
             // Remove index numbers (e.g., "0 Early" -> "Early")
-            _prediction = label.replaceAll(RegExp(r'[0-9]'), '').trim();
-            _confidenceStr = "Confidence: ${(confidence * 100).toStringAsFixed(1)}%";
+            _prediction = "Disease Detected: " + label.replaceAll(RegExp(r'[0-9]'), '').trim();
+            _confidenceStr = "Accuracy: ${(confidence * 100).toStringAsFixed(1)}%";
           }
         } else {
           _prediction = "Could not identify";
@@ -386,6 +410,92 @@ class _HomePageState extends State<HomePage> {
                 ],
               ],
               const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class WelcomeScreen extends StatelessWidget {
+  const WelcomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Spacer(),
+              // App Logo placeholder (using local asset if configured)
+              Image.asset(
+                'assets/logo.png',
+                height: 150,
+                width: 150,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(
+                    Icons.medical_services,
+                    size: 150,
+                    color: Color(0xFF2EAA78),
+                  );
+                },
+              ),
+              const SizedBox(height: 32),
+              const Text(
+                'Peanut Doctor',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF004D40),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Detect peanut leaf diseases like Rust and Leaf Spot instantly using AI. Keep your crops healthy with professional analysis.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                  height: 1.5,
+                ),
+              ),
+              const Spacer(),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const HomePage(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2EAA78),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'Get Started',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
             ],
           ),
         ),

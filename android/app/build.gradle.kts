@@ -42,10 +42,20 @@ android {
         release {
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 }
 
 flutter {
     source = "../.."
+}
+
+// FIX 4: The Kotlin Script translation to bypass the core-viewtree ghost file bug
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "androidx.core" && requested.name == "core") {
+            useVersion("1.12.0")
+        }
+    }
 }
