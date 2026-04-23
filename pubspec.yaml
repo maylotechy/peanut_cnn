@@ -33,5 +33,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/labels.txt
-    - assets/peanut_model_cnn.tflite
+    - assets/peanut_model_optimized_v2.tflite
     - assets/app_logo.png

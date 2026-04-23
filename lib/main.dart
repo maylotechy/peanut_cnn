@@ -57,7 +57,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadModel() async {
     try {
       String? res = await Tflite.loadModel(
-        model: "assets/peanut_model_cnn.tflite", // Ensure this matches your asset filename
+        model: "assets/peanut_model_optimized_v2.tflite", 
         labels: "assets/labels.txt",
       );
       print("Model loaded: $res");
@@ -153,9 +153,18 @@ class _HomePageState extends State<HomePage> {
             _prediction = "Not a Peanut Leaf";
             _confidenceStr = "Accuracy: ${(confidence * 100).toStringAsFixed(1)}%";
           } else {
-            // Remove index numbers (e.g., "0 Early" -> "Early")
-            _prediction = label.replaceAll(RegExp(r'[0-9]'), '').trim();
-            _confidenceStr = "Accuracy: ${(confidence * 100).toStringAsFixed(1)}%";
+            // 1. Clean the raw label and force it to lowercase to avoid matching errors
+            String cleanLabel = label.replaceAll(RegExp(r'[0-9]'), '').trim().toLowerCase();
+
+
+            final Map<String, String> uiLabels = {
+              'early': 'Early Leaf Spot Disease',
+              'late': 'Late Leaf Spot Disease',
+              'healthy': 'Healthy Leaf',
+              'rust': 'Rust Leaf Disease',
+            };
+            _prediction = uiLabels[cleanLabel] ?? cleanLabel;
+            _confidenceStr = "Accuracy: ${(confidence * 100).toStringAsFixed(2)}%";
           }
         } else {
           _prediction = "Could not identify";
@@ -390,12 +399,12 @@ class _HomePageState extends State<HomePage> {
                 Text(
                   _prediction == "Not a Peanut Leaf" || _prediction == "Could not identify"
                       ? _prediction
-                      : _prediction == 'Healthy'
+                      : _prediction == 'Healthy Leaf'
                           ? 'Status: Healthy plant!'
                           : 'Disease Detected: $_prediction',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: _prediction == 'Healthy' ? Colors.green : Colors.red,
+                    color: _prediction == 'Healthy Leaf' ? Colors.green : Colors.red,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
